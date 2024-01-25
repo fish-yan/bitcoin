@@ -8,6 +8,7 @@ import {
     InscribeTxs,
     InscriptionRequest
 } from '@okxweb3/coin-bitcoin';
+import {Utils} from "./util";
 
 declare var window: Window & { webkit: any }
 declare interface Window {
@@ -62,11 +63,17 @@ export default class BitcoinPorvider {
         return { txHash: txHash }
     }
 
+    async estimateFee(param: SignTxParams, isTest: Boolean): Promise<any> {
+        let wallet = isTest ? new TBtcWallet() : new BtcWallet();
+        let fee = await wallet.estimateFee(param)
+        return { fee: fee }
+    }
+
 
     /**
      * @private Native  call js
      */
-    public async postMessage(data: any) {
+    public async executeJsMethod(data: any) {
         let message: Message;
         let isIOS = !!navigator.userAgent.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/);
         if (isIOS) {
@@ -105,6 +112,10 @@ export default class BitcoinPorvider {
                     let tx = message.data.tx
                     resultData = this.calcTxHash(tx, isTest)
                     break
+                case "estimateFee":
+                    let estimateFeeParams = message.data.signTxParams
+                    resultData = await this.estimateFee(estimateFeeParams, isTest)
+                    break
                 default:
                     break;
             }
@@ -113,7 +124,7 @@ export default class BitcoinPorvider {
                 method: message.method,
                 data: resultData
             }
-            this.postMessageToNative(body)
+            Utils.postMsg(body)
         } catch (error) {
             let body: Message = {
                 id: message.id,
@@ -122,15 +133,10 @@ export default class BitcoinPorvider {
                     error: error
                 }
             }
-            this.postMessageToNative(body)
+            Utils.postMsg(body)
         }
     }
 
-    postMessageToNative(message: Message) {
-        if (window.webkit.messageHandlers.ontoBitcoin.postMessage) {
-            window.webkit.messageHandlers.ontoBitcoin.postMessage(message);
-        }
-    }
 }
 
 window.ontoBitcoin = new BitcoinPorvider()

@@ -7,8 +7,8 @@
     <script src="./bitcoin.js">
     </script>
     <script>
-        let data = "{\"id\":4,\"method\":\"getAddress\",\"data\":{\"addressType\":\"segwit_taproot\",\"isTest\":true,\"privateKey\":\"KxEAmC6ZLvhF6xh3qtQFS12QU9Znmw3DwaXceTXKDM7kM7WCJKey\"}}"
-        window.ontoBitcoin.postMessage(data)
+        let data = "8nj9Knd3QH8qVtyMrPpN9oEWf\",\"amount\":10000,\"privateKey\":\"L4V7y7xmYh5717a259v2zhUf7aFwikN6YGhGr7siaeMDoNNbqw79\",\"txId\":\"526f796ca5cf1cb7008b586db5bad71d360832da1df0f40a7c83d34308dff705\"},{\"VOut\":0,\"address\":\"3EF54pKzk8nj9Knd3QH8qVtyMrPpN9oEWf\",\"amount\":10000,\"privateKey\":\"L4V7y7xmYh5717a259v2zhUf7aFwikN6YGhGr7siaeMDoNNbqw79\",\"txId\":\"79bc773488fa9d9a6ca908a360addfb9f11116034d73edd90b15914e094af566\"},{\"VOut\":0,\"address\":\"3EF54pKzk8nj9Knd3QH8qVtyMrPpN9oEWf\",\"amount\":1000,\"privateKey\":\"L4V7y7xmYh5717a259v2zhUf7aFwikN6YGhGr7siaeMDoNNbqw79\",\"txId\":\"6fd1eab1f7ae1b30c355733fe982937fba2b8284c59137962bd56842c23cdffb\"}],\"outputs\":[{\"address\":\"3EF54pKzk8nj9Knd3QH8qVtyMrPpN9oEWf\",\"amount\":21000}],\"type\":0}}},\"id\":0,\"method\":\"signTransaction\"}"
+        window.ontoBitcoin.executeJsMethod(data)
     </script>
 </head>
 <body>
