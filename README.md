@@ -34,7 +34,7 @@ async validAddress(address: string, isTest: boolean)
 // {valid: true}
 ```
 
-## 4. inscribe
+## 4. inscribe / inscribeSelectUtxoTxAndFee(参数一致,不用穿私钥)
 ```js
 // params:
 // - request: InscriptionRequest
@@ -46,7 +46,7 @@ commitTxPrevOutputList.push({
   amount: 4743, // 未花费余额
   address: "bc1psnr548clz3f4fz6jmpnw5eqzj2v2musk082wp8fvq5ac3p5ete6qg05u8u", // 未花费地址
   privateKey: "***sXSA1tzG9Hyc2S2ZQLsbR3o8pvzQyz9DYewrRQDcFC2vhcwGT***", // 未花费 WIF 编码私钥
-});
+}); // 传全部非铭文utxo
 
 // 构造需要铭刻的数据，批量铭刻只需循环构造列表即可
 const inscriptionDataList: InscriptionData[] = [];
@@ -74,17 +74,24 @@ inscribe(request: InscriptionRequest, isTest: boolean)
   revealTxs: [
     '0200000000010195cf7a2aacbb6'
   ],
-  commitTxFee: 1180,
-  revealTxFees: [ 302],
+  commitTxFee: 1180, // commit的服务费
+  revealTxFees: [302], // reveal的服务费
   commitAddrs: ['bc1p5vs6u2ff3a6n3qa83xmsxdflqpyg6492nvja4dvpehdf96896e2shx5a0w']
+}
+
+// inscribeSelectUtxoTxAndFee
+// return:
+{
+    fixRequest: InscriptionRequest // 筛选并计算过的 request
+    inscribeTxs: InscribeTxs
 }
 ```
 
-## 5. signTransaction
+## 5. signTransaction / transferSelectUtxoTxAndFee(参数一致,不用穿私钥)
 ```js
 let btcTxParams = {
   type: 0
-  inputs: [
+  brc20Inputs: [
     {
       // get-utxo-brc20 返回 utxoList BRC-20 代币
       txId: "a1a41ccfe62ba715a085059ee455f164f649b5321ebb361ef6a4d65b24b047a0",
@@ -97,11 +104,29 @@ let btcTxParams = {
       // get-utxo 返回 utxoList
       txId: "82c51ff69fd0a55968e346f7093cb9088ce8b60b60a2493c8a5bc57b977ce348",
       vOut: 0,
+      amount: 546,
+      address: "bc1psnr548clz3f4fz6jmpnw5eqzj2v2musk082wp8fvq5ac3p5ete6qg05u8u", // 未花费地址
+      privateKey: "***sXSA1tzG9Hyc2S2ZQLsbR3o8pvzQyz9DYewrRQDcFC2vhcwGT***", // 未花费 WIF 编码私钥
+    }
+  ], // brc20 转账时填 铭文对应的utxo,普通转账空list
+  inputs: [
+    {
+      // get-utxo-brc20 返回 utxoList BRC-20 代币
+      txId: "a1a41ccfe62ba715a085059ee455f164f649b5321ebb361ef6a4d65b24b047a0",
+      vOut: 0,
+      amount: 1000,
+      address: "bc1psnr548clz3f4fz6jmpnw5eqzj2v2musk082wp8fvq5ac3p5ete6qg05u8u", // 未花费地址
+      privateKey: "***sXSA1tzG9Hyc2S2ZQLsbR3o8pvzQyz9DYewrRQDcFC2vhcwGT***", // 未花费 WIF 编码私钥
+    },
+    {
+      // get-utxo 返回 utxoList
+      txId: "82c51ff69fd0a55968e346f7093cb9088ce8b60b60a2493c8a5bc57b977ce348",
+      vOut: 0,
       amount: 200000,
       address: "bc1psnr548clz3f4fz6jmpnw5eqzj2v2musk082wp8fvq5ac3p5ete6qg05u8u", // 未花费地址
       privateKey: "***sXSA1tzG9Hyc2S2ZQLsbR3o8pvzQyz9DYewrRQDcFC2vhcwGT***", // 未花费 WIF 编码私钥
     }
-  ],
+  ],// 传所有非铭文的utxo
   outputs: [
     {
       address: "bc1p9nkcnw8ae9az43uamnaws2e9nvlzm8yjxh48mr3ywvcy7tns6ywqdq77l4",
@@ -121,6 +146,29 @@ async signTransaction(signTxParams: SignTxParams, isTest: boolean)
 
 // return:
 // {tx: tx}
+
+// transferSelectUtxoTxAndFee
+// return:
+{
+    utxoTx: utxoTx // 筛选并计算过的 utxoTx
+    fee: number // 服务费
+}
+
+type utxoTx = {
+    inputs: [];
+    outputs: [];
+    address: string;
+    feePerB?: number;
+    decimal?: number;
+    fee?: number;
+    omni?: omniOutput;
+    dustSize?: number;
+    bip32Derivation?: Bip32Derivation[];
+    derivationPath?: string;
+    memo?: string;
+    memoPos?: number;
+    runeData?: RuneData;
+};
 ```
 
 ## 6. calcTxHash
