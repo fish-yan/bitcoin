@@ -141,7 +141,9 @@ export default class BitcoinPorvider {
         // 筛选utxo
         let inputs = ontoUtxoTx.inputs.sort(this.descending('amount'))
         let spendInputs = []
-        spendInputs = spendInputs.concat(ontoUtxoTx.brc20Inputs)
+        if (ontoUtxoTx.brc20Inputs != undefined && ontoUtxoTx.brc20Inputs.length != 0) {
+            spendInputs = spendInputs.concat(ontoUtxoTx.brc20Inputs)
+        }
         let inputAmount = 0
         for (let index = 0; index < inputs.length; index++) {
             spendInputs.push(inputs[index])
@@ -163,7 +165,7 @@ export default class BitcoinPorvider {
             }
         }
         // brc20 交易抛出余额不足
-        if (ontoUtxoTx.brc20Inputs.length != 0) {
+        if (ontoUtxoTx.brc20Inputs != undefined && ontoUtxoTx.brc20Inputs.length != 0) {
             return Promise.reject("insufficientFunds")
         }
         // 不够支付 则减少output金额
