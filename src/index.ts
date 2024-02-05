@@ -71,7 +71,6 @@ export default class BitcoinPorvider {
 
     async inscribe(request: InscriptionRequest, isTest: boolean) {
         let { fixRequest, inscribeTxs } = await this.inscribeSelectUtxoTxAndFee(request, isTest)
-        console.log("inscribeTx", inscribeTxs);
         return inscribeTxs
     }
 
@@ -79,9 +78,7 @@ export default class BitcoinPorvider {
         let wallet = isTest ? new TBtcWallet() : new BtcWallet();
         let { utxoTx, fee } = await this.transferSelectUtxoTxAndFee(signTxParams.data, isTest)
         signTxParams.data = utxoTx
-        let tx = await wallet.signTransaction(signTxParams)
-        console.log("signTx", tx);
-        
+        let tx = await wallet.signTransaction(signTxParams)        
         return { tx: tx }
     }
 
@@ -120,8 +117,6 @@ export default class BitcoinPorvider {
             fixRequest.commitTxPrevOutputList = spendCommitTxPrevOutputList;
             let inscribeTxs = inscribe(network, fixRequest)
             if (inscribeTxs.commitTx.length != 0) {
-                console.log("inscribe", fixRequest, inscribeTxs);
-
                 return Promise.resolve({
                     fixRequest: fixRequest,
                     inscribeTxs: inscribeTxs
@@ -157,7 +152,6 @@ export default class BitcoinPorvider {
             inputAmount = inputAmount + input.amount
             let fee = estimateBtcFee(utxoTx, network)
             if (inputAmount >= outputAmount + fee) {
-                console.log("transfer", utxoTx, fee);
                 return Promise.resolve({
                     utxoTx: utxoTx,
                     fee: fee
@@ -190,7 +184,6 @@ export default class BitcoinPorvider {
                 address: ontoUtxoTx.address,
                 feePerB: ontoUtxoTx.feePerB
             })
-            console.log("transferAll", fixedAllUtxoTx, allFee);
             return Promise.resolve({
                 utxoTx: fixedAllUtxoTx,
                 fee: allFee
