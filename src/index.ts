@@ -175,8 +175,8 @@ export default class BitcoinPorvider {
             feePerB: ontoUtxoTx.feePerB
         })
         let allFee = estimateBtcFee(allUtxoTx, network)
-        if (allInputAmount > allFee + 546) {
-            let output = ontoUtxoTx.outputs[0]
+        let output = ontoUtxoTx.outputs[0]
+        if (allInputAmount == output.amount && allInputAmount > allFee + 546) {
             output.amount = allInputAmount - allFee
             let fixedAllUtxoTx: utxoTx = convert2UtxoTx({
                 inputs: ontoUtxoTx.inputs,
