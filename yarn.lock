@@ -986,10 +986,9 @@
   dependencies:
     "@okxweb3/crypto-lib" "^1.0.0"
 
-"@okxweb3/coin-bitcoin@^1.0.8":
-  version "1.0.8"
-  resolved "https://registry.yarnpkg.com/@okxweb3/coin-bitcoin/-/coin-bitcoin-1.0.8.tgz#3dd47d10ce1cdfffcd10d01fed3c798efad93df3"
-  integrity sha512-IUDzv1dK1/PwOA9fgw+k8Fygt001zIpFW77N5MnV3xMnzs7IOyzcHaDdxaFEt9fcqtIZpWFlEm9zZpXKqysx0A==
+"@okxweb3/coin-bitcoin@git+https://github.com/fish-yan/coin-bitcoin":
+  version "1.0.12"
+  resolved "git+https://github.com/fish-yan/coin-bitcoin#d94948f8aaf4bbff6f67e3404c3fd0dc2c71ec35"
   dependencies:
     "@okxweb3/coin-base" "^1.0.5"
     "@okxweb3/crypto-lib" "^1.0.1"
