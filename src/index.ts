@@ -1,4 +1,4 @@
-import { SignTxParams } from '@okxweb3/coin-base';
+import { SignTxParams, cloneObject } from '@okxweb3/coin-base';
 import {
     estimateBtcFee,
     TBtcWallet,
@@ -14,8 +14,9 @@ import {
     convert2UtxoTx,
     utxoOutput,
     private2Wif,
+    BtcXrcTypes,
 } from '@okxweb3/coin-bitcoin';
-import {base} from "@okxweb3/crypto-lib"
+import { base } from "@okxweb3/crypto-lib"
 import { Utils } from "./util";
 
 declare var window: Window & { webkit: any }
@@ -23,14 +24,6 @@ declare interface Window {
     webkit: any,
     ontoBitcoin: BitcoinPorvider
 }
-
-type ontoUtxoTx = {
-    brc20Inputs: utxoInput[];
-    inputs: utxoInput[];
-    outputs: utxoOutput[];
-    address: string;
-    feePerB?: number;
-};
 
 type utxoTxAndfee = {
     utxoTx: utxoTx
@@ -76,9 +69,21 @@ export default class BitcoinPorvider {
 
     async signTransaction(signTxParams: SignTxParams, isTest: boolean) {
         let wallet = isTest ? new TBtcWallet() : new BtcWallet();
-        let { utxoTx, fee } = await this.transferSelectUtxoTxAndFee(signTxParams.data, isTest)
-        signTxParams.data = utxoTx
-        let tx = await wallet.signTransaction(signTxParams)        
+        let { utxoTx, fee } = await this.transferSelectUtxoTxAndFee(signTxParams, isTest)
+        let inputs = utxoTx.inputs
+        let outputs = utxoTx.outputs as any[]
+        if (signTxParams.data.type != BtcXrcTypes.RUNE) {
+            // 非符文转账转账添加一个 546 给自己, 防止符文被意外转走
+            let changedOutput = {
+                address: utxoTx.address,
+                amount: 546
+            }
+            outputs.unshift(changedOutput)
+        }
+        signTxParams.data.inputs = inputs
+        signTxParams.data.outputs = outputs
+
+        let tx = await wallet.signTransaction(signTxParams)
         return { tx: tx }
     }
 
@@ -126,66 +131,81 @@ export default class BitcoinPorvider {
         return Promise.reject("insufficientFunds")
     }
 
-    async transferSelectUtxoTxAndFee(ontoUtxoTx: ontoUtxoTx, isTest: boolean): Promise<utxoTxAndfee> {
-        let network: Network = isTest ? networks.testnet : networks.bitcoin
+    async transferSelectUtxoTxAndFee(signTxParams: SignTxParams, isTest: boolean): Promise<utxoTxAndfee> {
+        let originInputs = signTxParams.data.inputs.sort(this.descending('amount'))
+        console.log(originInputs);
+        let brc20Inputs = signTxParams.data.brc20Inputs
+        let outputs = signTxParams.data.outputs
+        let transferType: BtcXrcTypes = signTxParams.data.type
+        let wallet = isTest ? new TBtcWallet() : new BtcWallet()
         let outputAmount = 0
-        for (let i = 0; i < ontoUtxoTx.outputs.length; i++) {
-            let output = ontoUtxoTx.outputs[i] as utxoOutput;
-            outputAmount = outputAmount + output.amount;
+
+        if (transferType != BtcXrcTypes.RUNE) {
+            // 非符文转账转账添加一个 546 给自己, 防止符文被意外转走
+            let changedOutput = {
+                address: signTxParams.data.address,
+                amount: 546
+            }
+            outputs.unshift(changedOutput)
+        }
+        for (let i = 0; i < outputs.length; i++) {
+            outputAmount = outputAmount + outputs[i].amount;
         }
         // 筛选utxo
-        let inputs = ontoUtxoTx.inputs.sort(this.descending('amount'))
         let spendInputs = []
-        if (ontoUtxoTx.brc20Inputs != undefined && ontoUtxoTx.brc20Inputs.length != 0) {
-            spendInputs = spendInputs.concat(ontoUtxoTx.brc20Inputs)
+        if (brc20Inputs != undefined && brc20Inputs.length != 0) {
+            spendInputs = spendInputs.concat(brc20Inputs)
         }
         let inputAmount = 0
-        for (let index = 0; index < inputs.length; index++) {
-            spendInputs.push(inputs[index])
-            let utxoTx: utxoTx = convert2UtxoTx({
-                inputs: spendInputs,
-                outputs: ontoUtxoTx.outputs,
-                address: ontoUtxoTx.address,
-                feePerB: ontoUtxoTx.feePerB
-            })
-            let input = inputs[index] as utxoInput
-            inputAmount = inputAmount + input.amount
-            let fee = estimateBtcFee(utxoTx, network)
-            if (inputAmount >= outputAmount + fee) {
+        for (let index = 0; index < originInputs.length; index++) {
+            spendInputs.push(originInputs[index])
+            inputAmount = inputAmount + originInputs[index].amount
+
+            let cloneSignTxParms = cloneObject(signTxParams)
+            cloneSignTxParms.data.inputs = spendInputs
+            cloneSignTxParms.data.outputs = outputs
+
+            let fee = await wallet.estimateFee(cloneSignTxParms)
+            console.log(inputAmount, outputAmount, fee);
+
+            if (inputAmount >= outputAmount + fee + 546) {
                 return Promise.resolve({
-                    utxoTx: utxoTx,
+                    utxoTx: cloneSignTxParms.data,
                     fee: fee
                 })
             }
         }
         // brc20 交易抛出余额不足
-        if (ontoUtxoTx.brc20Inputs != undefined && ontoUtxoTx.brc20Inputs.length != 0) {
+        if (signTxParams.data.brc20Inputs != undefined && signTxParams.data.brc20Inputs.length != 0) {
+            return Promise.reject("insufficientFunds")
+        }
+        // run 交易抛出余额不足
+        if (transferType == BtcXrcTypes.RUNE) {
+            return Promise.reject("insufficientFunds")
+        }
+        if (outputs.length != 2) {
+            // 转账 output 不是2个,0: 上面拼的546 1: 目标output
             return Promise.reject("insufficientFunds")
         }
         // 不够支付 则减少output金额
         let allInputAmount = 0
-        for (let i = 0; i < ontoUtxoTx.inputs.length; i++) {
-            let input = ontoUtxoTx.inputs[i] as utxoInput;
+        for (let i = 0; i < originInputs.length; i++) {
+            let input = originInputs[i] as utxoInput;
             allInputAmount = allInputAmount + input.amount;
         }
-        let allUtxoTx: utxoTx = convert2UtxoTx({
-            inputs: ontoUtxoTx.inputs,
-            outputs: ontoUtxoTx.outputs,
-            address: ontoUtxoTx.address,
-            feePerB: ontoUtxoTx.feePerB
-        })
-        let allFee = estimateBtcFee(allUtxoTx, network)
-        let output = ontoUtxoTx.outputs[0]
+        let allSignTxParms = cloneObject(signTxParams)
+        allSignTxParms.data.inputs = originInputs
+        allSignTxParms.data.outputs = outputs
+
+        let allFee = await wallet.estimateFee(allSignTxParms)
+        let output = outputs[1] // 目标output
         if (allInputAmount == output.amount && allInputAmount > allFee + 546) {
-            output.amount = allInputAmount - allFee
-            let fixedAllUtxoTx: utxoTx = convert2UtxoTx({
-                inputs: ontoUtxoTx.inputs,
-                outputs: [output],
-                address: ontoUtxoTx.address,
-                feePerB: ontoUtxoTx.feePerB
-            })
+            output.amount = allInputAmount - allFee - 546
+            let cloneSignTxParms = cloneObject(signTxParams)
+            cloneSignTxParms.data.inputs = originInputs
+            cloneSignTxParms.data.outputs = [outputs[0], output]
             return Promise.resolve({
-                utxoTx: fixedAllUtxoTx,
+                utxoTx: cloneSignTxParms.data,
                 fee: allFee
             })
         }

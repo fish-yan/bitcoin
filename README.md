@@ -88,6 +88,8 @@ inscribe(request: InscriptionRequest, isTest: boolean)
 ```
 
 ## 5. signTransaction / transferSelectUtxoTxAndFee(参数一致,不用穿私钥)
+
+### 普通交易签名数据结构
 ```js
 let btcTxParams = {
   type: 0
@@ -136,7 +138,63 @@ let btcTxParams = {
   address: "bc1psnr548clz3f4fz6jmpnw5eqzj2v2musk082wp8fvq5ac3p5ete6qg05u8u", // 找零地址
   feePerB: 72
 };
+```
 
+### rune 签名数据结构
+```js
+let btcTxParams = {
+  type: 102,
+  inputs: [
+    // rune token info
+    {
+      txId: "a1a41ccfe62ba715a085059ee455f164f649b5321ebb361ef6a4d65b24b047a0",
+      vOut: 0,
+      amount: 546,
+      address: "bc1psnr548clz3f4fz6jmpnw5eqzj2v2musk082wp8fvq5ac3p5ete6qg05u8u", // 未花费地址
+      privateKey: "***sXSA1tzG9Hyc2S2ZQLsbR3o8pvzQyz9DYewrRQDcFC2vhcwGT***", // 未花费 WIF 编码私钥
+      data: [{ "id": "26e414:0001", "amount": "500" }] // maybe many rune token
+    },
+    // gas fee utxo
+    {
+      txId: "82c51ff69fd0a55968e346f7093cb9088ce8b60b60a2493c8a5bc57b977ce348",
+      vOut: 0,
+      amount: 200000,
+      address: "bc1psnr548clz3f4fz6jmpnw5eqzj2v2musk082wp8fvq5ac3p5ete6qg05u8u", // 未花费地址
+      privateKey: "***sXSA1tzG9Hyc2S2ZQLsbR3o8pvzQyz9DYewrRQDcFC2vhcwGT***", // 未花费 WIF 编码私钥
+    }
+  ],
+  outputs: [
+    // rune send output
+    {
+      address: "bc1p9nkcnw8ae9az43uamnaws2e9nvlzm8yjxh48mr3ywvcy7tns6ywqdq77l4",
+      amount: 546,
+      data: { "id": "26e414:0001", "amount": "100" } // one output allow only one rune token
+    }
+  ],
+  address: "bc1psnr548clz3f4fz6jmpnw5eqzj2v2musk082wp8fvq5ac3p5ete6qg05u8u", // 找零地址
+  feePerB: 10,
+  runeData: { // 必须有
+      etching: {
+          divisibility: 7,
+          premine: 1000,
+          rune: "J",
+          spacers: 10,
+          symbol: 'Y',
+          terms: {
+              cap: 1000000000,
+              amount: 1000,
+              height: [12, 13],
+              offset: [15, 16],
+          }
+      },
+      mint:"26e414:0001",
+      pointer: 0,
+      burn: false // 必须有
+  }
+};
+```
+
+```js
 let signParams: SignTxParams = {
   privateKey: "***sXSA1tzG9Hyc2S2ZQLsbR3o8pvzQyz9DYewrRQDcFC2vhcwGT***",
   data: btcTxParams
