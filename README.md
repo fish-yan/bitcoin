@@ -144,16 +144,18 @@ let btcTxParams = {
 ```js
 let btcTxParams = {
   type: 102,
+  brc20Inputs: [
+      // rune token info
+      {
+          txId: "a1a41ccfe62ba715a085059ee455f164f649b5321ebb361ef6a4d65b24b047a0",
+          vOut: 0,
+          amount: 546,
+          address: "bc1pgvlezqu3crm44xjrrm7u3u63yqvw3rqvzu0vgcp2zsht5j9ss66q79p4zg", // 未花费地址
+          privateKey: "KyCySnrRzHkEBnDY9RfgHT1iXEP4684sMQxzBwapWmLmaoLzFvki", // 未花费 WIF 编码私钥
+          data: [{ "id": "26e414:0001", "amount": "500" }] // maybe many rune token
+      },
+  ],
   inputs: [
-    // rune token info
-    {
-      txId: "a1a41ccfe62ba715a085059ee455f164f649b5321ebb361ef6a4d65b24b047a0",
-      vOut: 0,
-      amount: 546,
-      address: "bc1psnr548clz3f4fz6jmpnw5eqzj2v2musk082wp8fvq5ac3p5ete6qg05u8u", // 未花费地址
-      privateKey: "***sXSA1tzG9Hyc2S2ZQLsbR3o8pvzQyz9DYewrRQDcFC2vhcwGT***", // 未花费 WIF 编码私钥
-      data: [{ "id": "26e414:0001", "amount": "500" }] // maybe many rune token
-    },
     // gas fee utxo
     {
       txId: "82c51ff69fd0a55968e346f7093cb9088ce8b60b60a2493c8a5bc57b977ce348",

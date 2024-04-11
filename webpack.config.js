@@ -2,7 +2,7 @@ const path = require('path');
 const webpack = require('webpack')
 
 module.exports = {
-    mode: 'production',
+    mode: 'development',
     entry: './src/index.ts',
     plugins: [
         new webpack.ProvidePlugin({
@@ -30,7 +30,8 @@ module.exports = {
         fallback: {
             "buffer": require.resolve("buffer/"),
             "crypto": require.resolve("crypto-browserify"),
-            "stream": require.resolve("stream-browserify")
+            "stream": require.resolve("stream-browserify"),
+            "vm": require.resolve("vm-browserify")
         }
     }
 };
