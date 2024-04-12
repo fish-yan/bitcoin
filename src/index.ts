@@ -1,6 +1,7 @@
 import { SignTxParams, cloneObject } from '@okxweb3/coin-base';
 import {
     BtcWallet,
+    TBtcWallet,
     inscribe,
     networks,
     Network,
@@ -37,29 +38,23 @@ export type Message = {
     data: any
 }
 
-export class RegTBtcWallet extends BtcWallet {
-    network() {
-        return networks.regtest;
-    }
-}
-
 export default class BitcoinPorvider {
 
     async getPrivateKey(mnemonic: string, segwitType: number, index: number, isTest: boolean) {
-        let wallet = isTest ? new RegTBtcWallet() : new BtcWallet();
+        let wallet = isTest ? new TBtcWallet() : new BtcWallet();
         const hdPath = await wallet.getDerivedPath({ index: index, segwitType: segwitType });
         let derivePrivateKey = await wallet.getDerivedPrivateKey({ mnemonic, hdPath });
         return { privateKey: derivePrivateKey }
     }
 
     async getAddress(privateKey: string, addressType: string, isTest: boolean) {
-        let wallet = isTest ? new RegTBtcWallet() : new BtcWallet();
+        let wallet = isTest ? new TBtcWallet() : new BtcWallet();
         let newAddress = await wallet.getNewAddress({ privateKey: privateKey, addressType: addressType });
         return { address: newAddress.address }
     }
 
     async validAddress(address: string, isTest: boolean) {
-        let wallet = isTest ? new RegTBtcWallet() : new BtcWallet();
+        let wallet = isTest ? new TBtcWallet() : new BtcWallet();
         let valid = await wallet.validAddress({ address: address })
         return { valid: valid.isValid }
     }
@@ -70,7 +65,7 @@ export default class BitcoinPorvider {
     }
 
     async signTransaction(signTxParams: SignTxParams, isTest: boolean) {
-        let wallet = isTest ? new RegTBtcWallet() : new BtcWallet();
+        let wallet = isTest ? new TBtcWallet() : new BtcWallet();
         let { utxoTx, fee } = await this.transferSelectUtxoTxAndFee(signTxParams, isTest)
         signTxParams.data.inputs = utxoTx.inputs
         signTxParams.data.outputs = utxoTx.outputs
@@ -79,14 +74,14 @@ export default class BitcoinPorvider {
     }
 
     async calcTxHash(tx: string, isTest: boolean) {
-        let wallet = isTest ? new RegTBtcWallet() : new BtcWallet();
+        let wallet = isTest ? new TBtcWallet() : new BtcWallet();
         let calcTxHashParams = { data: tx };
         let txHash = await wallet.calcTxHash(calcTxHashParams);
         return { txHash: txHash }
     }
 
     async estimateFee(param: SignTxParams, isTest: Boolean): Promise<any> {
-        let wallet = isTest ? new RegTBtcWallet() : new BtcWallet();
+        let wallet = isTest ? new TBtcWallet() : new BtcWallet();
         let fee = await wallet.estimateFee(param)
         return { fee: fee }
     }
@@ -128,7 +123,7 @@ export default class BitcoinPorvider {
         let brc20Inputs = signTxParams.data.brc20Inputs
         let outputs = signTxParams.data.outputs
         let transferType: BtcXrcTypes = signTxParams.data.type
-        let wallet = isTest ? new RegTBtcWallet() : new BtcWallet()
+        let wallet = isTest ? new TBtcWallet() : new BtcWallet()
         let outputAmount = 0
 
         if (transferType != BtcXrcTypes.RUNE) {
@@ -288,4 +283,4 @@ export default class BitcoinPorvider {
 
 }
 
-window.ontoBitcoin = new BitcoinPorvider()
+// window.ontoBitcoin = new BitcoinPorvider()
