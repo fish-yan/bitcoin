@@ -7,6 +7,7 @@ module.exports = {
     plugins: [
         new webpack.ProvidePlugin({
             Buffer: ['buffer', 'Buffer'], // ['包名', '包中的值']
+            process: 'process/browser'
 	})
     ],
     output: {
@@ -31,6 +32,7 @@ module.exports = {
             "buffer": require.resolve("buffer/"),
             "crypto": require.resolve("crypto-browserify"),
             "stream": require.resolve("stream-browserify"),
+            "process": require.resolve('process/browser'),
             "vm": require.resolve("vm-browserify")
         }
     }

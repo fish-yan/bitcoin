@@ -70,19 +70,8 @@ export default class BitcoinPorvider {
     async signTransaction(signTxParams: SignTxParams, isTest: boolean) {
         let wallet = isTest ? new TBtcWallet() : new BtcWallet();
         let { utxoTx, fee } = await this.transferSelectUtxoTxAndFee(signTxParams, isTest)
-        let inputs = utxoTx.inputs
-        let outputs = utxoTx.outputs as any[]
-        if (signTxParams.data.type != BtcXrcTypes.RUNE) {
-            // 非符文转账转账添加一个 546 给自己, 防止符文被意外转走
-            let changedOutput = {
-                address: utxoTx.address,
-                amount: 546
-            }
-            outputs.unshift(changedOutput)
-        }
-        signTxParams.data.inputs = inputs
-        signTxParams.data.outputs = outputs
-
+        signTxParams.data.inputs = utxoTx.inputs
+        signTxParams.data.outputs = utxoTx.outputs
         let tx = await wallet.signTransaction(signTxParams)
         return { tx: tx }
     }
