@@ -1,5 +1,5 @@
 import { SignTxParams, cloneObject } from '@okxweb3/coin-base';
-import BitcoinPorvider from "../src/index"
+import BitcoinPorvider, { RegTBtcWallet } from "../src/index"
 
 describe('index test', () => {
 
@@ -67,5 +67,15 @@ describe('index test', () => {
         let tx = await wallet.signTransaction(signParams, false)
         console.log("tx", tx);
 
+    })
+
+    test('regtestnet test', async () => {
+        let wallet = new RegTBtcWallet()
+        let address = await wallet.getNewAddress({
+            privateKey: "cS5TQA1faqQqH8LJn7yjFsMmWyuesqhLXfMin5r6SYNfJaNZKAHy",
+            addressType: "segwit_taproot"
+        })
+        console.log(address);
+        
     })
 })
