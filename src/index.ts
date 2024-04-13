@@ -253,8 +253,8 @@ export default class BitcoinPorvider {
                     resultData = await this.estimateFee(estimateFeeParams, isTest)
                     break
                 case "transferSelectUtxoTxAndFee":
-                    let ontoUtxoTx = message.data.signTxParams.data
-                    resultData = await this.transferSelectUtxoTxAndFee(ontoUtxoTx, isTest)
+                    let selectSignTxParams = message.data.signTxParams
+                    resultData = await this.transferSelectUtxoTxAndFee(selectSignTxParams, isTest)
                     break
                 case "inscribeSelectUtxoTxAndFee":
                     let estimateRequest = message.data.request
