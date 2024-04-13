@@ -264,6 +264,7 @@ let data = {
     params: {
         privateKey: string
         addressType: string // - addressType: 地址类型 "Legacy" | "segwit_native" | "segwit_p2sh"
+        isTest: boolean
     }
     return: {
         address: "0x123434"
@@ -272,6 +273,7 @@ let data = {
     validAddress:
     params: {
         address: string
+        isTest: boolean
     }
     return: {
         valid: true
@@ -280,6 +282,7 @@ let data = {
     inscribe:
     params: {
         request: InscriptionRequest
+        isTest: boolean
     }
     return: { 
         commitTx: '02000000000104',
@@ -294,6 +297,7 @@ let data = {
     signTransaction:
     params: {
         signTxParams: SignTxParams
+        isTest: boolean
     }
     return: {
         tx: tx
@@ -302,6 +306,7 @@ let data = {
     calcTxHash:
     params: {
         tx: string
+        isTest: boolean
     }
     return: {
         txHash: txHash

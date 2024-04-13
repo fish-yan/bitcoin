@@ -283,4 +283,4 @@ export default class BitcoinPorvider {
 
 }
 
-// window.ontoBitcoin = new BitcoinPorvider()
+window.ontoBitcoin = new BitcoinPorvider()
