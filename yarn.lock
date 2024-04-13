@@ -1280,7 +1280,7 @@
 
 "@okxweb3/coin-bitcoin@github:fish-yan/coin-bitcoin":
   version "1.0.12"
-  resolved "git+ssh://git@github.com/fish-yan/coin-bitcoin.git#8484f834255767409a0b8ff2b3d0ec165c46eea3"
+  resolved "git+ssh://git@github.com/fish-yan/coin-bitcoin.git#a6823db33dd6c4fd690e985c76c7eaa4a1b02d8c"
   dependencies:
     "@okxweb3/coin-base" "^1.0.5"
     "@okxweb3/crypto-lib" "^1.0.1"
