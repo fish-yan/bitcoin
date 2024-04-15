@@ -119,17 +119,30 @@ export default class BitcoinPorvider {
 
     async transferSelectUtxoTxAndFee(signTxParams: SignTxParams, isTest: boolean): Promise<utxoTxAndfee> {
         let originInputs = signTxParams.data.inputs.sort(this.descending('amount'))
-        console.log(originInputs);
         let brc20Inputs = signTxParams.data.brc20Inputs
         let outputs = signTxParams.data.outputs
         let transferType: BtcXrcTypes = signTxParams.data.type
         let wallet = isTest ? new TBtcWallet() : new BtcWallet()
-        let outputAmount = 0
+                
+        // 筛选utxo
+        let spendInputs = []
+        if (brc20Inputs != undefined && brc20Inputs.length != 0) {
+            spendInputs = spendInputs.concat(brc20Inputs)
+        }
 
+        let outputAmount = 0
         if (transferType != BtcXrcTypes.RUNE) {
             // 非符文转账转账添加一个 546 给自己, 防止符文被意外转走
+            let changeAddress: string
+            if (brc20Inputs.length != 0) {
+                changeAddress = brc20Inputs[0].address
+            } else if (originInputs.length != 0) {
+                changeAddress = originInputs[0].address
+            } else {
+                changeAddress = signTxParams.data.address
+            }
             let changedOutput = {
-                address: signTxParams.data.address,
+                address: changeAddress,
                 amount: 546
             }
             outputs.unshift(changedOutput)
@@ -137,11 +150,7 @@ export default class BitcoinPorvider {
         for (let i = 0; i < outputs.length; i++) {
             outputAmount = outputAmount + outputs[i].amount;
         }
-        // 筛选utxo
-        let spendInputs = []
-        if (brc20Inputs != undefined && brc20Inputs.length != 0) {
-            spendInputs = spendInputs.concat(brc20Inputs)
-        }
+
         let inputAmount = 0
         for (let index = 0; index < originInputs.length; index++) {
             spendInputs.push(originInputs[index])
