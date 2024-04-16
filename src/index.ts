@@ -12,6 +12,8 @@ import {
     utxoInput,
     private2Wif,
     BtcXrcTypes,
+    buildRuneData,
+    RuneData
 } from '@okxweb3/coin-bitcoin';
 import { base } from "@okxweb3/crypto-lib"
 import { Utils } from "./util";
@@ -130,17 +132,26 @@ export default class BitcoinPorvider {
             spendInputs = spendInputs.concat(brc20Inputs)
         }
 
-        // 非符文转账转账如果包含铭文添加一个 546 给自己, 防止符文被意外转走
+        // 铭文文转账转账如果包含铭文添加一个 546 给自己, 防止符文被意外转走
         let isAddRuneChangeOutput = false
-        if (transferType != BtcXrcTypes.RUNE) {
+        if (transferType != BtcXrcTypes.RUNE && brc20Inputs != undefined) {
             for (let index = 0; index < brc20Inputs.length; index++) {
                 let input = brc20Inputs[index]
                 if (input.rune && !isAddRuneChangeOutput) {
                     let runeChangedOutput = {
                         address: input.address,
-                        amount: 546
+                        amount: 546,
                     }
-                    outputs.unshift(runeChangedOutput)
+                    // 铭文push到最后, 增加 runeData 
+                    outputs.push(runeChangedOutput)
+                    const runeData: RuneData = {
+                        edicts: [],
+                        pointer: outputs.length - 1, // 指定多余的rune找零到指定input
+                        burn: false
+                    }
+                    let opReturnScript = buildRuneData(!isTest, runeData)
+                    const opReturnOutput = {address: '', amount: 0, omniScript: base.toHex(opReturnScript)};
+                    outputs.push(opReturnOutput)
                     isAddRuneChangeOutput = true
                     break;
                 }
