@@ -123,30 +123,31 @@ export default class BitcoinPorvider {
         let outputs = signTxParams.data.outputs
         let transferType: BtcXrcTypes = signTxParams.data.type
         let wallet = isTest ? new TBtcWallet() : new BtcWallet()
-                
+
         // 筛选utxo
         let spendInputs = []
         if (brc20Inputs != undefined && brc20Inputs.length != 0) {
             spendInputs = spendInputs.concat(brc20Inputs)
         }
 
-        let outputAmount = 0
+        // 非符文转账转账如果包含铭文添加一个 546 给自己, 防止符文被意外转走
+        let isAddRuneChangeOutput = false
         if (transferType != BtcXrcTypes.RUNE) {
-            // 非符文转账转账添加一个 546 给自己, 防止符文被意外转走
-            let changeAddress: string
-            if (brc20Inputs.length != 0) {
-                changeAddress = brc20Inputs[0].address
-            } else if (originInputs.length != 0) {
-                changeAddress = originInputs[0].address
-            } else {
-                changeAddress = signTxParams.data.address
+            for (let index = 0; index < brc20Inputs.length; index++) {
+                let input = brc20Inputs[index]
+                if (input.rune && !isAddRuneChangeOutput) {
+                    let runeChangedOutput = {
+                        address: input.address,
+                        amount: 546
+                    }
+                    outputs.unshift(runeChangedOutput)
+                    isAddRuneChangeOutput = true
+                    break;
+                }
             }
-            let changedOutput = {
-                address: changeAddress,
-                amount: 546
-            }
-            outputs.unshift(changedOutput)
         }
+
+        let outputAmount = 0
         for (let i = 0; i < outputs.length; i++) {
             outputAmount = outputAmount + outputs[i].amount;
         }
@@ -155,6 +156,15 @@ export default class BitcoinPorvider {
         for (let index = 0; index < originInputs.length; index++) {
             spendInputs.push(originInputs[index])
             inputAmount = inputAmount + originInputs[index].amount
+
+            if (originInputs[index].rune && !isAddRuneChangeOutput) {
+                let runeChangedOutput = {
+                    address: originInputs[index].address,
+                    amount: 546
+                }
+                outputs.unshift(runeChangedOutput)
+                isAddRuneChangeOutput = true
+            }
 
             let cloneSignTxParms = cloneObject(signTxParams)
             cloneSignTxParms.data.inputs = spendInputs
