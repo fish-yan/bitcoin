@@ -179,13 +179,4 @@ describe('index test', () => {
 
     })
 
-    // test('regtestnet test', async () => {
-    //     let wallet = new TBtcWallet()
-    //     let address = await wallet.getNewAddress({
-    //         privateKey: "cS5TQA1faqQqH8LJn7yjFsMmWyuesqhLXfMin5r6SYNfJaNZKAHy",
-    //         addressType: "segwit_taproot"
-    //     })
-    //     console.log(address);
-        
-    // })
 })

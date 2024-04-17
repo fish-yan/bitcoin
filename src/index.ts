@@ -184,7 +184,7 @@ export default class BitcoinPorvider {
             let fee = await wallet.estimateFee(cloneSignTxParms)
             console.log(inputAmount, outputAmount, fee);
 
-            if (inputAmount >= outputAmount + fee + 546) {
+            if (inputAmount >= outputAmount + fee) {
                 return Promise.resolve({
                     utxoTx: cloneSignTxParms.data,
                     fee: fee
@@ -199,10 +199,6 @@ export default class BitcoinPorvider {
         if (transferType == BtcXrcTypes.RUNE) {
             return Promise.reject("insufficientFunds")
         }
-        if (outputs.length != 2) {
-            // 转账 output 不是2个,0: 上面拼的546 1: 目标output
-            return Promise.reject("insufficientFunds")
-        }
         // 不够支付 则减少output金额
         let allInputAmount = 0
         for (let i = 0; i < originInputs.length; i++) {
@@ -213,13 +209,18 @@ export default class BitcoinPorvider {
         allSignTxParms.data.inputs = originInputs
         allSignTxParms.data.outputs = outputs
 
-        let allFee = await wallet.estimateFee(allSignTxParms)
-        let output = outputs[1] // 目标output
-        if (allInputAmount == output.amount && allInputAmount > allFee + 546) {
+        let allFee = await wallet.estimateFee(allSignTxParms)        
+        let output = outputs[outputs.length - 1] // 目标output
+        if (allInputAmount == output.amount && allInputAmount > allFee) {
             output.amount = allInputAmount - allFee - 546
             let cloneSignTxParms = cloneObject(signTxParams)
             cloneSignTxParms.data.inputs = originInputs
-            cloneSignTxParms.data.outputs = [outputs[0], output]
+            if (isAddRuneChangeOutput) {
+                cloneSignTxParms.data.outputs = [outputs[0], output]
+            } else {
+                cloneSignTxParms.data.outputs = [output]
+            }
+           
             return Promise.resolve({
                 utxoTx: cloneSignTxParms.data,
                 fee: allFee

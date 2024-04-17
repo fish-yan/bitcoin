@@ -63,6 +63,39 @@ describe('index test', () => {
         console.log(result);
 
     })
+
+    test('brc20 inscribe transfer', async () => {
+        // 自定义信息，包括费率、找零地址、铭文输出金额
+        const request = {
+            commitTxPrevOutputList: [{
+                txId: "4834d1f66769ae553967e4f5332acf23851c374331bc48c6f2cfe4849cd309ae",
+                vOut: 1,
+                amount: 546,
+                address: "2N8CVEgsh3p85we2sztndGScvjFvZNDhTQx",
+                privateKey: "cMmcX1FwYYGJrpifuQehXttCHcXE5egWAu8zXiyG1rJWJ1UtM4Eh",
+            }, {
+                txId: "14d6b9e23d7a1e421988121a67c91cc3d82c1fde5d50874e7d9fc7f377499e80",
+                vOut: 1,
+                amount: 499961458,
+                address: "2N8CVEgsh3p85we2sztndGScvjFvZNDhTQx",
+                privateKey: "cMmcX1FwYYGJrpifuQehXttCHcXE5egWAu8zXiyG1rJWJ1UtM4Eh",
+            }],
+            inscriptionDataList: [{
+                contentType: "text/plain;charset=utf-8",
+                body: `{"p":"brc-20","op":"transfer","tick":"onto","amt":"100"}`,
+                revealAddr: "2N8CVEgsh3p85we2sztndGScvjFvZNDhTQx",
+            }],
+            commitFeeRate: 118,
+            revealFeeRate: 118,
+            revealOutValue: 546,
+            changeAddress: "2N8CVEgsh3p85we2sztndGScvjFvZNDhTQx",
+        };
+
+        let wallet = new BitcoinPorvider()
+        let result = await wallet.inscribe(request, true)
+        console.log(result);
+
+    })
 /*
     test('inscription has rune test', async () => {
         let btcTxParams = {
