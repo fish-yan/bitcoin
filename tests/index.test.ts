@@ -117,12 +117,12 @@ describe('index test', () => {
     test('rune edicts test', async () => {
         let btcTxParams = {
             type: 102,
-            brc20Inputs: [
-                // // rune token info
+            // brc20Inputs: [
+                // rune token info
                 // {
                 //     txId: "993e1fab6d46fe4c43fa804faf092ee6e929d60191f897feafcda79c1f4a9a05",
                 //     vOut: 0,
-                //     amount: 546,
+                //     amount: 1000,
                 //     address: "2N8CVEgsh3p85we2sztndGScvjFvZNDhTQx", // 未花费地址
                 //     privateKey: "cMmcX1FwYYGJrpifuQehXttCHcXE5egWAu8zXiyG1rJWJ1UtM4Eh", // 未花费 WIF 编码私钥
                 //     data: [{ "id": "540:1", "amount": "500" }], // maybe many rune token
@@ -132,11 +132,11 @@ describe('index test', () => {
                 // {
                 //     txId: "0abc59ba24d500bc7db91441f23f652fc06124ee35d81e7c2b6df1f9d4021b31",
                 //     vOut: 0,
-                //     amount: 546,
+                //     amount: 2000,
                 //     address: "2N8CVEgsh3p85we2sztndGScvjFvZNDhTQx", // 未花费地址
                 //     privateKey: "cMmcX1FwYYGJrpifuQehXttCHcXE5egWAu8zXiyG1rJWJ1UtM4Eh", // 未花费 WIF 编码私钥
                 //     data: [{ "id": "540:1", "amount": "500" }], // maybe many rune token
-                //     inscription: false,
+                //     inscription: true,
                 //     rune: true
                 // },
                 // {
@@ -159,7 +159,7 @@ describe('index test', () => {
                 //     inscription: false,
                 //     rune: true
                 // },
-            ],
+            // ],
             inputs: [
                 // gas fee utxo
                 {
@@ -201,17 +201,17 @@ describe('index test', () => {
             ],
             outputs: [
                 // rune send output
-                // {
-                //     address: "2MtSoWHG6mVDLH3eQ3BBLdXumimtPkwbgws",
-                //     amount: 546,
-                //     data: { "id": "540:1", "amount": "600" } // one output allow only one rune token
-                // }
+                {
+                    address: "2MtSoWHG6mVDLH3eQ3BBLdXumimtPkwbgws",
+                    amount: 546,
+                    data: { "id": "540:1", "amount": "600" } // one output allow only one rune token
+                }
             ],
             address: "2N8CVEgsh3p85we2sztndGScvjFvZNDhTQx", // 找零地址
             feePerB: 80,
             runeData: { // 必须有
                 etching: null,
-                mint: "540:1",
+                // mint: "540:1",
                 // pointer: 0,
                 burn: false // 必须有
             }

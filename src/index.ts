@@ -121,7 +121,10 @@ export default class BitcoinPorvider {
 
     async transferSelectUtxoTxAndFee(signTxParams: SignTxParams, isTest: boolean): Promise<utxoTxAndfee> {
         let originInputs = signTxParams.data.inputs.sort(this.descending('amount'))
-        let brc20Inputs = signTxParams.data.brc20Inputs.sort(this.descending('inscription'))
+        let brc20Inputs = []
+        if (signTxParams.data.brc20Inputs) {
+            brc20Inputs = signTxParams.data.brc20Inputs.sort(this.descending('inscription'))
+        }
         let outputs = signTxParams.data.outputs
         let transferType: BtcXrcTypes = signTxParams.data.type
         let wallet = isTest ? new TBtcWallet() : new BtcWallet()
@@ -130,7 +133,7 @@ export default class BitcoinPorvider {
         let inputAmount = 0
         let spendInputs = []
         let isAddChangeOutput546 = false
-        if (brc20Inputs != undefined && brc20Inputs.length != 0) {
+        if (brc20Inputs.length != 0) {
             spendInputs = spendInputs.concat(brc20Inputs)
             for (let index = 0; index < brc20Inputs.length; index++) {
                 let input = brc20Inputs[index]
@@ -140,14 +143,14 @@ export default class BitcoinPorvider {
                     if (input.inscription) {
                         let changeOutput546 = {
                             address: input.address,
-                            amount: 546,
+                            amount: input.amount,
                         }
                         outputs.unshift(changeOutput546)
                         isAddChangeOutput546 = true
                     }
                 } else { 
                     // 铭文交易 如果有符文, 将符文找回到 input 地址
-                    if (input.rune && !isAddChangeOutput546) {
+                    if (!isAddChangeOutput546) {
                         let changeOutput546 = {
                             address: input.address,
                             amount: 546,
@@ -178,11 +181,6 @@ export default class BitcoinPorvider {
             isAddChangeOutput546 = true
         }
 
-        let outputAmount = 0
-        for (let i = 0; i < outputs.length; i++) {
-            outputAmount = outputAmount + outputs[i].amount;
-        }
-
         for (let index = 0; index < originInputs.length; index++) {
             let input = originInputs[index]
             if (input.inscription) {
@@ -190,10 +188,10 @@ export default class BitcoinPorvider {
             }
             spendInputs.push(input)
             inputAmount = inputAmount + input.amount
-            if (brc20Inputs != undefined && brc20Inputs.length != 0) { // 铭文或符文转账
+            if (brc20Inputs.length != 0) { // 铭文或符文转账
                 if (transferType != BtcXrcTypes.RUNE) { // 铭文手续费
                     // 铭文交易 如果有符文, 将符文找回到 input 地址
-                    if (input.rune && !isAddChangeOutput546) {
+                    if (!isAddChangeOutput546) {
                         let changeOutput546 = {
                             address: input.address,
                             amount: 546,
@@ -212,7 +210,7 @@ export default class BitcoinPorvider {
                     }
                 }
             } else { // 普通转账
-                if (input.rune && !isAddChangeOutput546) {
+                if (!isAddChangeOutput546) {
                     let runeChangedOutput = {
                         address: input.address,
                         amount: 546
@@ -227,7 +225,10 @@ export default class BitcoinPorvider {
             cloneSignTxParms.data.outputs = outputs
 
             let fee = await wallet.estimateFee(cloneSignTxParms)
-
+            let outputAmount = 0
+            for (let i = 0; i < outputs.length; i++) {
+                outputAmount = outputAmount + outputs[i].amount;
+            }
             if (inputAmount >= outputAmount + fee) {
                 return Promise.resolve({
                     utxoTx: cloneSignTxParms.data,
@@ -236,7 +237,7 @@ export default class BitcoinPorvider {
             }
         }
         // brc20 交易抛出余额不足
-        if (signTxParams.data.brc20Inputs != undefined && signTxParams.data.brc20Inputs.length != 0) {
+        if (brc20Inputs.length != 0) {
             return Promise.reject("insufficientFunds")
         }
         // run 交易抛出余额不足
