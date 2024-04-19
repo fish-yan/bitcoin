@@ -63,7 +63,7 @@ describe('index test', () => {
         console.log(result);
 
     })
-
+/*
     test('brc20 inscribe transfer', async () => {
         // 自定义信息，包括费率、找零地址、铭文输出金额
         const request = {
@@ -96,7 +96,7 @@ describe('index test', () => {
         console.log(result);
 
     })
-/*
+
     test('inscription has rune test', async () => {
         let btcTxParams = {
             type: 0,

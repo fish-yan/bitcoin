@@ -121,41 +121,61 @@ export default class BitcoinPorvider {
 
     async transferSelectUtxoTxAndFee(signTxParams: SignTxParams, isTest: boolean): Promise<utxoTxAndfee> {
         let originInputs = signTxParams.data.inputs.sort(this.descending('amount'))
-        let brc20Inputs = signTxParams.data.brc20Inputs
+        let brc20Inputs = signTxParams.data.brc20Inputs.sort(this.descending('inscription'))
         let outputs = signTxParams.data.outputs
         let transferType: BtcXrcTypes = signTxParams.data.type
         let wallet = isTest ? new TBtcWallet() : new BtcWallet()
 
         // 筛选utxo
+        let inputAmount = 0
         let spendInputs = []
+        let isAddChangeOutput546 = false
         if (brc20Inputs != undefined && brc20Inputs.length != 0) {
             spendInputs = spendInputs.concat(brc20Inputs)
-        }
-
-        // 铭文文转账转账如果包含铭文添加一个 546 给自己, 防止符文被意外转走
-        let isAddRuneChangeOutput = false
-        if (transferType != BtcXrcTypes.RUNE && brc20Inputs != undefined) {
             for (let index = 0; index < brc20Inputs.length; index++) {
                 let input = brc20Inputs[index]
-                if (input.rune && !isAddRuneChangeOutput) {
-                    let runeChangedOutput = {
-                        address: input.address,
-                        amount: 546,
+                inputAmount = inputAmount + input.amount
+                if (transferType == BtcXrcTypes.RUNE) { 
+                    // 符文交易 如果有铭文,将铭文找回到 input 地址
+                    if (input.inscription) {
+                        let changeOutput546 = {
+                            address: input.address,
+                            amount: 546,
+                        }
+                        outputs.unshift(changeOutput546)
+                        isAddChangeOutput546 = true
                     }
-                    // 铭文push到最后, 增加 runeData 
-                    outputs.push(runeChangedOutput)
-                    const runeData: RuneData = {
-                        edicts: [],
-                        pointer: outputs.length - 1, // 指定多余的rune找零到指定input
-                        burn: false
+                } else { 
+                    // 铭文交易 如果有符文, 将符文找回到 input 地址
+                    if (input.rune && !isAddChangeOutput546) {
+                        let changeOutput546 = {
+                            address: input.address,
+                            amount: 546,
+                        }
+                        // push 符文找零output, 增加 runeData 指定 pointer
+                        outputs.push(changeOutput546)
+                        const runeData: RuneData = {
+                            edicts: [],
+                            pointer: outputs.length - 1, // 指定多余的rune找零到指定input
+                            burn: false
+                        }
+                        let opReturnScript = buildRuneData(!isTest, runeData)
+                        const opReturnOutput = {address: '', amount: 0, omniScript: base.toHex(opReturnScript)};
+                        outputs.push(opReturnOutput)
+                        isAddChangeOutput546 = true
+                        break;
                     }
-                    let opReturnScript = buildRuneData(!isTest, runeData)
-                    const opReturnOutput = {address: '', amount: 0, omniScript: base.toHex(opReturnScript)};
-                    outputs.push(opReturnOutput)
-                    isAddRuneChangeOutput = true
-                    break;
                 }
             }
+        }
+
+        if (transferType == BtcXrcTypes.RUNE && !isAddChangeOutput546) {
+            let changeOutput546 = {
+                address: signTxParams.data.address,
+                amount: 546
+            }
+            outputs.unshift(changeOutput546)
+            isAddChangeOutput546 = true
         }
 
         let outputAmount = 0
@@ -163,18 +183,43 @@ export default class BitcoinPorvider {
             outputAmount = outputAmount + outputs[i].amount;
         }
 
-        let inputAmount = 0
         for (let index = 0; index < originInputs.length; index++) {
-            spendInputs.push(originInputs[index])
-            inputAmount = inputAmount + originInputs[index].amount
-
-            if (originInputs[index].rune && !isAddRuneChangeOutput) {
-                let runeChangedOutput = {
-                    address: originInputs[index].address,
-                    amount: 546
+            let input = originInputs[index]
+            if (input.inscription) {
+                continue;
+            }
+            spendInputs.push(input)
+            inputAmount = inputAmount + input.amount
+            if (brc20Inputs != undefined && brc20Inputs.length != 0) { // 铭文或符文转账
+                if (transferType != BtcXrcTypes.RUNE) { // 铭文手续费
+                    // 铭文交易 如果有符文, 将符文找回到 input 地址
+                    if (input.rune && !isAddChangeOutput546) {
+                        let changeOutput546 = {
+                            address: input.address,
+                            amount: 546,
+                        }
+                        // push 符文找零output, 增加 runeData 指定 pointer
+                        outputs.push(changeOutput546)
+                        const runeData: RuneData = {
+                            edicts: [],
+                            pointer: outputs.length - 1, // 指定多余的rune找零到指定input
+                            burn: false
+                        }
+                        let opReturnScript = buildRuneData(!isTest, runeData)
+                        const opReturnOutput = {address: '', amount: 0, omniScript: base.toHex(opReturnScript)};
+                        outputs.push(opReturnOutput)
+                        isAddChangeOutput546 = true
+                    }
                 }
-                outputs.unshift(runeChangedOutput)
-                isAddRuneChangeOutput = true
+            } else { // 普通转账
+                if (input.rune && !isAddChangeOutput546) {
+                    let runeChangedOutput = {
+                        address: input.address,
+                        amount: 546
+                    }
+                    outputs.unshift(runeChangedOutput)
+                    isAddChangeOutput546 = true
+                }
             }
 
             let cloneSignTxParms = cloneObject(signTxParams)
@@ -182,7 +227,6 @@ export default class BitcoinPorvider {
             cloneSignTxParms.data.outputs = outputs
 
             let fee = await wallet.estimateFee(cloneSignTxParms)
-            console.log(inputAmount, outputAmount, fee);
 
             if (inputAmount >= outputAmount + fee) {
                 return Promise.resolve({
@@ -215,7 +259,7 @@ export default class BitcoinPorvider {
             output.amount = allInputAmount - allFee - 546
             let cloneSignTxParms = cloneObject(signTxParams)
             cloneSignTxParms.data.inputs = originInputs
-            if (isAddRuneChangeOutput) {
+            if (isAddChangeOutput546) {
                 cloneSignTxParms.data.outputs = [outputs[0], output]
             } else {
                 cloneSignTxParms.data.outputs = [output]
